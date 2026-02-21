@@ -15,12 +15,98 @@
             "windows-amd64": "server/dist/plugin-windows-amd64.exe"
         }
     },
-    "webapp": {
-        "bundle_path": "webapp/dist/main.js"
-    },
     "settings_schema": {
         "header": "",
         "footer": "",
-        "settings": []
+        "settings": [
+            {
+                "key": "EnableRetentionPolicy",
+                "display_name": "Activate Retention:",
+                "type": "bool",
+                "help_text": "When enabled the Retention will run periodically to archive stale posts.",
+                "placeholder": "",
+                "default": false
+            },
+
+            {
+                "key": "AgeInSeconds",
+                "display_name": "Post age(seconds):",
+                "type": "number",
+                "help_text": "Age in seconds for a post to be considered stale(minimum 15; default 31 536 000, e.g. 365 days).",
+                "default": 31536000
+            },
+            {
+                "key": "Frequency",
+                "display_name": "Frequency:",
+                "type": "dropdown",
+                "help_text": "Determines how often the Retention is run.",
+                "default": "monthly",
+                "options": [
+                    {
+                        "display_name": "Monthly",
+                        "value": "monthly"
+                    },
+                    {
+                        "display_name": "Daily",
+                        "value": "daily"
+                    },
+                    {
+                        "display_name": "Weekly",
+                        "value": "weekly"
+                    }
+                ]
+            },
+            {
+                "key": "DayOfWeek",
+                "display_name": "Day of week:",
+                "type": "dropdown",
+                "help_text": "Determines what day of the week the Retention is run when Frequency is Monthly or Weekly.",
+                "default": "1",
+                "options": [
+                    {
+                        "display_name": "Sunday",
+                        "value": "0"
+                    },
+                    {
+                        "display_name": "Monday",
+                        "value": "1"
+                    },
+                    {
+                        "display_name": "Tuesday",
+                        "value": "2"
+                    },
+                    {
+                        "display_name": "Wednesday",
+                        "value": "3"
+                    },
+                    {
+                        "display_name": "Thursday",
+                        "value": "4"
+                    },
+                    {
+                        "display_name": "Friday",
+                        "value": "5"
+                    },
+                    {
+                        "display_name": "Saturday",
+                        "value": "6"
+                    }
+                ]
+            },
+            {
+                "key": "TimeOfDay",
+                "display_name": "Time of day:",
+                "type": "text",
+                "help_text": "Time to run the Retention. Format: 'h:mmam/pm ±HHMM' (e.g. '1:00am -0700' for 1 AM Pacific, '9:30pm +0100' for 9:30 PM Central Europe, '2:00pm +0000' for 2 PM UTC). The timezone offset is required.",
+                "default": "1:00am +0200"
+            },
+            {
+                "key": "BatchSize",
+                "display_name": "Batch size:",
+                "type": "number",
+                "help_text": "Posts will be removed in batches of this size to avoid stressing the server(s) or database(s).",
+                "default": 50
+            }
+        ]
     }
 }
