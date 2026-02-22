@@ -8,18 +8,20 @@ import (
 )
 
 type StalePostOpts struct {
-	AgeInSeconds int
+	AgeInDays float64
+	UserId    string
 }
 
 func (ss *SQLStore) GetStalePosts(opts StalePostOpts, page int, pageSize int) ([]string, bool, error) {
-	olderThan := model.GetMillisForTime(time.Now().Add(-1 * time.Duration(opts.AgeInSeconds) * time.Second))
+	olderThan := model.GetMillisForTime(time.Now().Add(-1 * time.Duration(opts.AgeInDays*24.*float64(time.Hour))))
 
 	// find all channels where no posts or reactions have been modified,deleted since the olderThan timestamp.
 	query := ss.builder.Select("p.Id").Distinct().
 		From("Posts as p").
 		Where(sq.And{
-			sq.Eq{"p.DeleteAt": 0},
+			sq.Eq{"p.UserId": opts.UserId},
 			sq.Lt{"p.UpdateAt": olderThan},
+			sq.Eq{"p.DeleteAt": 0},
 		}).
 		GroupBy("p.Id").
 		OrderBy("p.Id")
@@ -35,7 +37,7 @@ func (ss *SQLStore) GetStalePosts(opts StalePostOpts, page int, pageSize int) ([
 
 	rows, err := query.Query()
 	if err != nil {
-		ss.logger.Error("error fetching stale channels", "err", err)
+		ss.logger.Error("error fetching stale posts", "err", err)
 		return nil, false, err
 	}
 
@@ -44,7 +46,7 @@ func (ss *SQLStore) GetStalePosts(opts StalePostOpts, page int, pageSize int) ([
 		post := &model.Post{}
 
 		if err := rows.Scan(&post.Id); err != nil {
-			ss.logger.Error("error scanning stale channels", "err", err)
+			ss.logger.Error("error scanning stale posts", "err", err)
 			return nil, false, err
 		}
 		posts = append(posts, post.Id)

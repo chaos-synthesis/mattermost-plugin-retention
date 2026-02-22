@@ -53,6 +53,10 @@ type Plugin struct {
 
 // OnActivate is invoked when the plugin is activated. If an error is returned, the plugin will be deactivated.
 func (p *Plugin) OnActivate() error {
+	if p.GetSiteURL() == "" {
+		p.API.LogError("SiteURL must be set. Some features will operate incorrectly if the SiteURL is not set. See documentation for details: http://about.mattermost.com/default-site-url")
+	}
+
 	p.client = pluginapi.NewClient(p.API, p.Driver)
 
 	kvStore, err := kvstore.NewKVStore(p.client, manifest)
@@ -63,13 +67,13 @@ func (p *Plugin) OnActivate() error {
 
 	p.router = p.initRouter()
 
-	bot, err := rbot.New(p.client)
-	if err != nil {
-		return errors.Wrap(err, "failed to create bot user")
-	}
-	p.botUser = bot
+	//bot, err := rbot.New(p.client)
+	//if err != nil {
+	//	return errors.Wrap(err, "failed to create bot user")
+	//}
+	//p.botUser = bot
 
-	p.commandClient = command.NewCommandHandler(p.client, p.kvStore, bot)
+	p.commandClient = command.NewCommandHandler(p.client, p.kvStore)
 
 	// Create job for post retention
 	commands.PrepareRun()

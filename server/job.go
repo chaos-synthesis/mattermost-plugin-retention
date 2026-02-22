@@ -6,9 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chaos-synthesis/mattermost-plugin-retention/server/channels"
 	"github.com/chaos-synthesis/mattermost-plugin-retention/server/config"
-	"github.com/chaos-synthesis/mattermost-plugin-retention/server/store"
 	"github.com/mattermost/mattermost/server/public/pluginapi/cluster"
 	"github.com/wiggin77/merror"
 )
@@ -43,14 +41,11 @@ func (p *Plugin) runJob() {
 		return
 	}
 
-	opts := channels.ArchiverOpts{
-		StalePostOpts: store.StalePostOpts{
-			AgeInSeconds: p.getConfiguration().AgeInSeconds,
-		},
+	opts := ArchiverOpts{
 		BatchSize: p.getConfiguration().BatchSize,
 	}
 
-	results, err := channels.RemoveStalePostsWithApi(ctx, p.sqlStore, p.client, opts, p.API)
+	results, err := p.RemoveUserStalePosts(ctx, opts)
 	if err != nil {
 		p.API.LogError("Error running Posts Retention job", err)
 		return
@@ -143,7 +138,7 @@ func (j *PostRetentionJobHelper) nextWaitInterval(now time.Time, metadata cluste
 	next := settings.Frequency.CalcNext(lastFinished, settings.DayOfWeek, settings.TimeOfDay)
 	delta := next.Sub(now)
 	// Debug
-	//delta = (15 * time.Second) - now.Sub(metadata.LastFinished)
+	delta = (15 * time.Second) - now.Sub(metadata.LastFinished)
 
 	j.plugin.API.LogDebug("Posts Retention next run scheduled", "last", lastFinished.Format(config.FullLayout), "next", next.Format(config.FullLayout), "wait", delta.String())
 

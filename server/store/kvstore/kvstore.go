@@ -5,7 +5,7 @@ import "github.com/mattermost/mattermost/server/public/model"
 type UserSettings struct {
 	UserID        string
 	Enabled       bool
-	PostAgeInDays float32
+	PostAgeInDays float64
 }
 
 // KVStore Define your methods here. This package is used to access the KVStore pluginapi methods.
