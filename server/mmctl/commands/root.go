@@ -13,7 +13,7 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 
-	"github.com/mattermost/mattermost/server/v8/cmd/mmctl/printer"
+	"github.com/chaos-synthesis/mattermost-plugin-retention/server/mmctl/printer"
 )
 
 func PrepareRun() {

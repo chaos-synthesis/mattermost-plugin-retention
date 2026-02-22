@@ -1,7 +1,7 @@
 {
     "id": "com.chaos-synthesis.plugin-retention",
-    "name": "Plugin Starter Retention",
-    "description": "This plugin serves as a starting point for writing a Mattermost plugin.",
+    "name": "Posts Retention",
+    "description": "Deleting stale messages based on per-user preferences.",
     "homepage_url": "https://github.com/chaos-synthesis/mattermost-plugin-retention",
     "support_url": "https://github.com/chaos-synthesis/mattermost-plugin-retention/issues",
     "icon_path": "assets/starter-template-icon.svg",
@@ -16,7 +16,7 @@
         }
     },
     "settings_schema": {
-        "header": "",
+        "header": "To set up this plugin you first need to enable local unix socket. Visit the [documentation for configuration steps](https://docs.mattermost.com/administration-guide/manage/mmctl-command-line-tool.html#local-mode).",
         "footer": "",
         "settings": [
             {
@@ -28,13 +28,6 @@
                 "default": false
             },
 
-            {
-                "key": "AgeInSeconds",
-                "display_name": "Post age(seconds):",
-                "type": "number",
-                "help_text": "Age in seconds for a post to be considered stale(minimum 15; default 31 536 000, e.g. 365 days).",
-                "default": 31536000
-            },
             {
                 "key": "Frequency",
                 "display_name": "Frequency:",

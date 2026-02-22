@@ -6,10 +6,6 @@ const (
 
 	MinBatchSize = 10
 	MaxBatchSize = 1000
-
-	DefaultAgeInSeconds = 31536000 // 365 days in seconds
-	MinAgeInSeconds     = 15
-	//MaxAgeInDays     = 10000
 )
 
 // Configuration captures the plugin's external configuration as exposed in the Mattermost server
@@ -25,8 +21,6 @@ const (
 // copy appropriate for your types.
 type Configuration struct {
 	EnableRetentionPolicy bool
-	// AgeInSeconds is the age in seconds at which posts will be deleted by the retention policy.
-	AgeInSeconds int
 	// Frequency is the frequency at which the plugin will run the retention policy.
 	Frequency string
 	// DayOfWeek is the day of the week on which the plugin will run the retention policy.
@@ -39,8 +33,7 @@ type Configuration struct {
 
 func NewConfiguration() *Configuration {
 	return &Configuration{
-		AgeInSeconds: DefaultAgeInSeconds,
-		BatchSize:    DefaultBatchSize,
+		BatchSize: DefaultBatchSize,
 	}
 }
 

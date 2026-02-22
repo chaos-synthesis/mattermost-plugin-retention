@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/chaos-synthesis/mattermost-plugin-retention/server/mmctl/printer"
 	"github.com/mattermost/mattermost/server/public/model"
-	"github.com/mattermost/mattermost/server/v8/cmd/mmctl/printer"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"

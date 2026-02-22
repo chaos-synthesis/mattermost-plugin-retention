@@ -12,7 +12,7 @@ import (
 	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/chaos-synthesis/mattermost-plugin-retention/server/mmctl/client"
-	"github.com/mattermost/mattermost/server/v8/cmd/mmctl/printer"
+	"github.com/chaos-synthesis/mattermost-plugin-retention/server/mmctl/printer"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"

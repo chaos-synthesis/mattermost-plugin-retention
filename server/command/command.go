@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	rbot "github.com/chaos-synthesis/mattermost-plugin-retention/server/bot"
 	"github.com/chaos-synthesis/mattermost-plugin-retention/server/store/kvstore"
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/pluginapi"
@@ -15,23 +14,23 @@ type Handler struct {
 	// kvStore is the client used to read/write KV records for this plugin.
 	kvStore kvstore.KVStore
 	// botUser used for messaging
-	botUser *rbot.Bot
+	//botUser *rbot.Bot
 }
 
 type Command interface {
 	Handle(args *model.CommandArgs) (*model.CommandResponse, error)
-	executeHelloCommand(args *model.CommandArgs) *model.CommandResponse
+	executeCommandInteractive(args *model.CommandArgs) *model.CommandResponse
 }
 
 const postRetentionCommandTrigger = "post-retention"
 
 // NewCommandHandler Register all your slash commands.
-func NewCommandHandler(client *pluginapi.Client, kvStore kvstore.KVStore, botUser *rbot.Bot) Command {
+func NewCommandHandler(client *pluginapi.Client, kvStore kvstore.KVStore) Command {
 	err := client.SlashCommand.Register(&model.Command{
 		Trigger:          postRetentionCommandTrigger,
 		AutoComplete:     true,
 		AutoCompleteHint: "",
-		AutoCompleteDesc: "Post retention policy management.",
+		AutoCompleteDesc: "Post retention management.",
 	})
 	if err != nil {
 		client.Log.Error("Failed to register command", "error", err)
@@ -40,7 +39,6 @@ func NewCommandHandler(client *pluginapi.Client, kvStore kvstore.KVStore, botUse
 	return &Handler{
 		client:  client,
 		kvStore: kvStore,
-		botUser: botUser,
 	}
 }
 
@@ -65,19 +63,6 @@ func (c *Handler) Handle(args *model.CommandArgs) (*model.CommandResponse, error
 	}
 }
 
-func (c *Handler) executeHelloCommand(args *model.CommandArgs) *model.CommandResponse {
-	if len(strings.Fields(args.Command)) < 2 {
-		return &model.CommandResponse{
-			ResponseType: model.CommandResponseTypeEphemeral,
-			Text:         "Please specify a username",
-		}
-	}
-	username := strings.Fields(args.Command)[1]
-	return &model.CommandResponse{
-		Text: "Hello, " + username,
-	}
-}
-
 func (c *Handler) executeCommandInteractive(args *model.CommandArgs) *model.CommandResponse {
 	userSettings, err := c.kvStore.GetUserSettings(args.UserId)
 	if err != nil {
@@ -88,6 +73,16 @@ func (c *Handler) executeCommandInteractive(args *model.CommandArgs) *model.Comm
 		}
 	}
 
+	post := CreateStateMessagePost(userSettings, fmt.Sprintf("/plugins/%s", c.kvStore.GetManifest().Id), "")
+
+	return &model.CommandResponse{
+		ResponseType: model.CommandResponseTypeEphemeral,
+		ChannelId:    args.ChannelId,
+		Attachments:  post.Attachments(),
+	}
+}
+
+func CreateStateMessagePost(userSettings kvstore.UserSettings, bundleUrl string, message string) *model.Post {
 	statusValue := "Inactive"
 	if userSettings.Enabled {
 		statusValue = "Active"
@@ -95,14 +90,16 @@ func (c *Handler) executeCommandInteractive(args *model.CommandArgs) *model.Comm
 
 	postAgeInDaysValue := "N/A"
 	if userSettings.Enabled && userSettings.PostAgeInDays > 0 {
-		postAgeInDaysValue = fmt.Sprintf("%f days", userSettings.PostAgeInDays)
+		postAgeInDaysValue = fmt.Sprintf("%d days", int(userSettings.PostAgeInDays))
 	}
 
-	return &model.CommandResponse{
-		ResponseType: model.CommandResponseTypeEphemeral,
-		ChannelId:    args.ChannelId,
-		Attachments: []*model.SlackAttachment{{
-			Title: "Posts retention policy management",
+	post := &model.Post{
+		Type: model.PostTypeEphemeral,
+	}
+	post.SetProps(model.StringInterface{
+		"attachments": []*model.SlackAttachment{{
+			Title: "Posts retention policy",
+			Text:  message,
 			Fields: []*model.SlackAttachmentField{
 				{
 					Title: "Status",
@@ -117,12 +114,13 @@ func (c *Handler) executeCommandInteractive(args *model.CommandArgs) *model.Comm
 			},
 			Actions: []*model.PostAction{{
 				Integration: &model.PostActionIntegration{
-					URL: "/api/v1/settings",
-					//URL: fmt.Sprintf("/plugins/%s/interactive/button/1", c.kvStore.GetManifest().Id),
+					URL: fmt.Sprintf("%s/api/v1/actions/settings", bundleUrl),
 				},
 				Type: model.PostActionTypeButton,
 				Name: "Settings",
 			}},
 		}},
-	}
+	})
+
+	return post
 }

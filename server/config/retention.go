@@ -13,7 +13,6 @@ const (
 
 type RetentionJobSettings struct {
 	EnableRetentionPolicy bool
-	AgeInSeconds          int
 	Frequency             Frequency
 	DayOfWeek             int
 	TimeOfDay             time.Time
@@ -23,7 +22,6 @@ type RetentionJobSettings struct {
 func (c *RetentionJobSettings) Clone() *RetentionJobSettings {
 	return &RetentionJobSettings{
 		EnableRetentionPolicy: c.EnableRetentionPolicy,
-		AgeInSeconds:          c.AgeInSeconds,
 		Frequency:             c.Frequency,
 		TimeOfDay:             c.TimeOfDay,
 		BatchSize:             c.BatchSize,
@@ -31,8 +29,8 @@ func (c *RetentionJobSettings) Clone() *RetentionJobSettings {
 }
 
 func (c *RetentionJobSettings) String() string {
-	return fmt.Sprintf("enabled=%T; ageDays=%d; freq=%s; tod=%s; batchSize=%d",
-		c.EnableRetentionPolicy, c.AgeInSeconds, c.Frequency, c.TimeOfDay.Format(TimeOfDayLayout), c.BatchSize)
+	return fmt.Sprintf("enabled=%T; freq=%s; tod=%s; batchSize=%d",
+		c.EnableRetentionPolicy, c.Frequency, c.TimeOfDay.Format(TimeOfDayLayout), c.BatchSize)
 }
 
 func (c *Configuration) GetPostRetentionJobSettings() (*RetentionJobSettings, error) {
@@ -40,11 +38,6 @@ func (c *Configuration) GetPostRetentionJobSettings() (*RetentionJobSettings, er
 		return &RetentionJobSettings{
 			EnableRetentionPolicy: false,
 		}, nil
-	}
-
-	age := c.AgeInSeconds
-	if age < MinAgeInSeconds {
-		age = MinAgeInSeconds
 	}
 
 	freq, err := FreqFromString(c.Frequency)
@@ -72,7 +65,6 @@ func (c *Configuration) GetPostRetentionJobSettings() (*RetentionJobSettings, er
 
 	return &RetentionJobSettings{
 		EnableRetentionPolicy: c.EnableRetentionPolicy,
-		AgeInSeconds:          age,
 		Frequency:             freq,
 		DayOfWeek:             dow,
 		TimeOfDay:             tod,

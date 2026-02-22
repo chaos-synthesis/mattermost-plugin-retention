@@ -17,9 +17,8 @@ const (
 // This allows us to better control which values are stored with which keys.
 
 type StoreImpl struct {
-	client      *pluginapi.Client
-	manifest    *model.Manifest
-	activeUsers []string
+	client   *pluginapi.Client
+	manifest *model.Manifest
 }
 
 func NewKVStore(client *pluginapi.Client, manifest *model.Manifest) (StoreImpl, error) {
@@ -30,9 +29,8 @@ func NewKVStore(client *pluginapi.Client, manifest *model.Manifest) (StoreImpl, 
 	}
 
 	return StoreImpl{
-		client:      client,
-		manifest:    manifest,
-		activeUsers: activeUsers,
+		client:   client,
+		manifest: manifest,
 	}, nil
 }
 
@@ -65,6 +63,11 @@ func (kv StoreImpl) SetUserSettings(userID string, value *UserSettings) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to add active user settings")
 		}
+	} else {
+		_, err := kv.removeActiveUser(userID)
+		if err != nil {
+			return errors.Wrap(err, "failed to remove active user settings")
+		}
 	}
 
 	_, err := kv.client.KV.Set(userSettingsKeyPrefix+userID, value)
@@ -74,16 +77,39 @@ func (kv StoreImpl) SetUserSettings(userID string, value *UserSettings) error {
 	return nil
 }
 
-func (kv StoreImpl) GetActiveUsers() []string {
-	return slices.Clone(kv.activeUsers)
+func (kv StoreImpl) GetActiveUsers() ([]string, error) {
+	var activeUsers []string
+	err := kv.client.KV.Get(activeUsersKeyPrefix, &activeUsers)
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed to get active users")
+	}
+	return activeUsers, nil
 }
 
 func (kv StoreImpl) addActiveUser(userID string) (bool, error) {
-	if slices.Contains(kv.activeUsers, userID) {
+	activeUsers, err := kv.GetActiveUsers()
+	if err != nil {
+		return false, err
+	}
+	if slices.Contains(activeUsers, userID) {
 		return false, nil
 	}
 
-	kv.activeUsers = append(kv.activeUsers, userID)
+	activeUsers = append(activeUsers, userID)
 
-	return kv.client.KV.Set(activeUsersKeyPrefix, kv.activeUsers)
+	return kv.client.KV.Set(activeUsersKeyPrefix, activeUsers)
+}
+
+func (kv StoreImpl) removeActiveUser(userID string) (bool, error) {
+	activeUsers, err := kv.GetActiveUsers()
+	if err != nil {
+		return false, err
+	}
+	if !slices.Contains(activeUsers, userID) {
+		return false, nil
+	}
+
+	idx := slices.Index(activeUsers, userID)
+	activeUsers = slices.Delete(activeUsers, idx, idx+1)
+	return kv.client.KV.Set(activeUsersKeyPrefix, activeUsers)
 }
